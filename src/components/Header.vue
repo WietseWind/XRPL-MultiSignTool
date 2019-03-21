@@ -2,6 +2,7 @@
   <div class="">
     <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
       <a class="navbar-brand text-white mr-auto mr-lg-0 cursor-pointer" @click="changeRoute('Home')">
+        <img src="icons/bg-000000-icon.png" class="logo" />
         XRPL MultiSignTool
       </a>
       <button class="navbar-toggler p-0 border-0" type="button" data-toggle="offcanvas">
@@ -83,12 +84,14 @@ export default {
 <style scoped lang="scss">
   a {
     &.navbar-brand {
-      background-image: url('/icons/bg-000000-icon.png');
       padding-left: 60px;
-      background-repeat: no-repeat;
-      background-position: top left;
-      background-size: 50px;
       padding-right: 40px;
+      img.logo {
+        height: 50px;
+        margin-left: -70px;
+        position: absolute;
+        margin-top: -11px;
+      }
     }
     &.cursor-pointer {
       cursor: pointer;
