@@ -7,17 +7,27 @@ A vue-webpack project to:
 3. MultiSign (OFFLINE), until the quorum is met
 4. Combine the signatures and submit the transaction
 
+There's also a helper tool to setup Multi Signing.
+
+
 ## Project setup
+Start by installing the dependencies:
+
+
 ```
 npm install
 ```
 
 ### Compiles and hot-reloads for development
+
 ```
 npm run serve
 ```
 
-### Compiles and minifies for production
+### Compiles and zips for distribution / local use
+
 ```
-npm run build
+./build.sh
 ```
+
+The built output will live in `/dist` and a distribution zip will be stored in `/dist.zip`.
