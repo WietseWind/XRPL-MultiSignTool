@@ -1,4 +1,11 @@
-# multisigntool
+# XRPL MultiSignTool
+
+A vue-webpack project to:
+
+1. Compose a XRPL transaction (JSON)
+2. Distribute the raw (dummy) signed transaction for Multi Signing
+3. MultiSign (OFFLINE), until the quorum is met
+4. Combine the signatures and submit the transaction
 
 ## Project setup
 ```
@@ -14,16 +21,3 @@ npm run serve
 ```
 npm run build
 ```
-
-### Run your tests
-```
-npm run test
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
