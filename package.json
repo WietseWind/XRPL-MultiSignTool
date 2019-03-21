@@ -8,7 +8,15 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "vue": "^2.6.6"
+    "ripple-binary-codec": "^0.2.0",
+    "ripple-hashes": "^0.3.1",
+    "rippled-ws-client": "^1.0.0",
+    "sweetalert": "^2.1.2",
+    "vue": "^2.6.6",
+    "vue-clipboard2": "^0.3.0",
+    "vue-codemirror": "^4.0.6",
+    "vue-json-pretty": "^1.4.1",
+    "xrpl-accountlib": "git+https://github.com/WietseWind/xrpl-accountlib.git"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.5.0",
