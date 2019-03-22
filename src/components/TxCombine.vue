@@ -72,7 +72,7 @@
 
         <div v-if="quorumMet >= accountData.signer_lists[0].SignerQuorum && !fullySigned" class="col-sm-12 mt-2">
           <div class="alert alert-success text-center">
-            ✓ <b>Signer Quorum is met.</b> Existing signer quorum (<code class="text-dark">{{ quorumMet }}</code>) satisfies signer list quorum (<code class="text-dark">{{ accountData.signer_lists[0].SignerQuorum }}</code>).
+            ✓ <b>Signer Quorum is met.</b> Existing signer weight (sum) (<code class="text-dark">{{ quorumMet }}</code>) satisfies signer list quorum (<code class="text-dark">{{ accountData.signer_lists[0].SignerQuorum }}</code>).
             <br />
             <small>No need to add more signatures unless you explicitly want to.</small>
           </div>
@@ -80,7 +80,7 @@
 
         <div v-if="quorumMet < accountData.signer_lists[0].SignerQuorum && !fullySigned" class="col-sm-12 mt-2">
           <div class="alert alert-warning text-center">
-            Signer quorum (<code class="text-dark">{{ quorumMet }}</code>) doesn't satisfie the signer list quorum (<code class="text-dark">{{ accountData.signer_lists[0].SignerQuorum }}</code>) yet.
+            Signer weight (sum) (<code class="text-dark">{{ quorumMet }}</code>) doesn't satisfie the signer list quorum (<code class="text-dark">{{ accountData.signer_lists[0].SignerQuorum }}</code>) yet.
             <br />
             <small>Please add more signatures.</small>
           </div>
