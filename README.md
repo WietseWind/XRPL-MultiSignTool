@@ -9,10 +9,13 @@ A vue-webpack project to:
 
 There's also a helper tool to setup Multi Signing.
 
+# Run (the easy way)
+Get yourself the most recent release from https://github.com/WietseWind/XRPL-MultiSignTool/releases
+
+Or run in development mode / build your own package:
 
 ## Project setup
 Start by installing the dependencies:
-
 
 ```
 npm install
