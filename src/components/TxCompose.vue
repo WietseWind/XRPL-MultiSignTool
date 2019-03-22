@@ -39,7 +39,7 @@
       <div class="alert alert-primary text-center" v-if="fetching">Querying the XRPL...</div>
       <div class="alert alert-danger text-center" v-if="error"><b>Error:</b> {{ errorData }}</div>
       <div class="alert alert-warning text-center" v-if="setupMultiSigning && !fetching && !error">
-        This account (<a :href="explorerUrl + account" target="_blank"><code class="text-primary">{{ account }}</code></a>)
+        This account (<a :href="$env.explorerUrl + account" target="_blank"><code class="text-primary">{{ account }}</code></a>)
         isn't setup for MultiSigning.
         <br />
         <button @click="routeSetupMultiSigning()" class="mt-3 btn btn-primary">Setup MultiSigning</button>
@@ -47,7 +47,7 @@
       <div v-if="Object.keys(accountData).length > 0">
         <div class="alert alert-success text-center">
           🎉 Retrieved account &amp; MultiSign information for
-          <a :href="explorerUrl + accountData.Account" target="_blank"><code class="text-primary">{{ accountData.Account }}</code></a>
+          <a :href="$env.explorerUrl + accountData.Account" target="_blank"><code class="text-primary">{{ accountData.Account }}</code></a>
           from the XRP ledger.
         </div>
         <div class="row">
@@ -61,7 +61,7 @@
           </div>
           <label class="col-sm-2">Signers</label>
           <div class="col-sm-10">
-            <a v-for="signer in accountData.signer_lists[0].SignerEntries" :key="signer.Account" :href="explorerUrl + signer.SignerEntry.Account" target="_blank" class="btn btn-outline-primary btn-sm mr-2 mb-1">
+            <a v-for="signer in accountData.signer_lists[0].SignerEntries" :key="signer.Account" :href="$env.explorerUrl + signer.SignerEntry.Account" target="_blank" class="btn btn-outline-primary btn-sm mr-2 mb-1">
               <code>{{ signer.SignerEntry.Account }}</code>
               <span class="ml-1 badge badge-primary">{{ signer.SignerEntry.SignerWeight }}</span>
             </a>
@@ -163,9 +163,6 @@ export default {
     }
   },
   computed: {
-    explorerUrl () {
-      return 'https://bithomp.com/explorer/'
-    },
     ready () {
       return this.$env.rippled.connected && this.$env.rippled.ledger
     }
@@ -279,6 +276,7 @@ export default {
         } else {
           if (accountInfo.account_data.signer_lists && accountInfo.account_data.signer_lists.length > 0) {
             this.accountData = accountInfo.account_data
+            this.transaction.json.Fee = (100 + (1 + this.accountData.signer_lists[0].SignerEntries.length)) + ''
             this.transaction.json.Account = this.accountData.Account
             this.transaction.json.Sequence = this.accountData.Sequence
             this.transaction.json.LastLedgerSequence = this.$env.rippled.ledger.ledger_index + (60 * 60 * 24 * 30 / 4) // ~ One month

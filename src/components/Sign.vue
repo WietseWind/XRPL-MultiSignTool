@@ -20,7 +20,7 @@
     <div class="row mt-2" v-if="signed">
       <label v-if="signed" for="signbtn" class="col-sm-2 pt-1">Retry</label>
       <div class="col-sm-10">
-        <button @click="reset()" id="signbtn" class="btn btn-outline-primary">⌫ Sign again</button>
+        <button @click="reset()" id="signbtn" class="btn btn-outline-secondary">⌫ Sign again</button>
       </div>
     </div>
 

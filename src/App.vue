@@ -8,7 +8,7 @@
       </keep-alive>
 
       <div class="text-right">
-        <small class="text-muted pb-3">
+        <small class="text-muted">
           Mode: {{ $env.online ? 'online' : 'offline' }} - {{ $env.local ? 'local' : 'web' }},
           By: <a href="https://twitter.com/WietseWind" target="_blank">@WietseWind</a>,
           Source: <a href="https://github.com/WietseWind/XRPL-MultiSignTool" target="_blank">Github.com</a>
@@ -67,6 +67,7 @@ export default {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     padding-top: 56px;
+    padding-bottom: 15px;
   }
 
   @media (max-width: 991.98px) {

@@ -24,21 +24,21 @@
         <div class="navbar-nav navbar-right">
           <button
             class="btn btn-sm ml-1"
-            :disabled="live"
-            :class="{ 'btn-outline-secondary': !live, 'btn-primary': live && connected, 'btn-warning': live && connecting }"
-            @click="$env.connectTo(servers.live)"
+            :disabled="$env.live"
+            :class="{ 'btn-outline-secondary': !$env.live, 'btn-primary': $env.live && connected, 'btn-warning': $env.live && connecting }"
+            @click="$env.connectTo($env.servers.live)"
           >
             <b>LIVE</b>
-            <span v-if="live && connected"> @ {{ $env.rippled.ledger.ledger_index }}</span>
+            <span v-if="$env.live && connected"> @ {{ $env.rippled.ledger.ledger_index }}</span>
           </button>
           <button
             class="btn btn-sm ml-1"
-            :disabled="test"
-            :class="{ 'btn-outline-secondary': !test, 'btn-primary': test && connected, 'btn-warning': test && connecting }"
-            @click="$env.connectTo(servers.test)"
+            :disabled="$env.test"
+            :class="{ 'btn-outline-secondary': !$env.test, 'btn-primary': $env.test && connected, 'btn-warning': $env.test && connecting }"
+            @click="$env.connectTo($env.servers.test)"
           >
             <b>TEST</b>
-            <span v-if="test && connected"> @ {{ $env.rippled.ledger.ledger_index }}</span>
+            <span v-if="$env.test && connected"> @ {{ $env.rippled.ledger.ledger_index }}</span>
           </button>
         </div>
       </div>
@@ -49,23 +49,9 @@
 <script>
 export default {
   name: 'Header',
-  data () {
-    return {
-      servers: {
-        test: 'wss://s.altnet.rippletest.net:51233',
-        live: 'wss://rippled.xrptipbot.com'
-      }
-    }
-  },
   computed: {
-    live () {
-      return this.$env.rippled.endpoint === this.servers.live
-    },
-    test () {
-      return this.$env.rippled.endpoint === this.servers.test
-    },
     ready () {
-      return this.live || this.test
+      return this.$env.live || this.$env.test
     },
     connecting () {
       return this.ready && !(this.$env.rippled.connected && this.$env.rippled.ledger)

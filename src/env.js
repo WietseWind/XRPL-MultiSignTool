@@ -6,6 +6,10 @@ export default new Vue({
     return {
       online: true,
       local: false,
+      servers: {
+        test: 'wss://s.altnet.rippletest.net:51233',
+        live: 'wss://rippled.xrptipbot.com'
+      },
       rippled: {
         endpoint: '',
         connected: false,
@@ -27,6 +31,15 @@ export default new Vue({
   computed: {
     devmode () {
       return window.location.hostname === 'localhost'
+    },
+    live () {
+      return this.rippled.endpoint === this.servers.live
+    },
+    test () {
+      return this.rippled.endpoint === this.servers.test
+    },
+    explorerUrl () {
+      return this.live ? 'https://bithomp.com/explorer/' : 'https://test.bithomp.com/explorer/'
     }
   },
   methods: {

@@ -22,7 +22,7 @@
         </span>
       </p>
       <p>
-        Please enter the XRPL account wherefore you wish to compose a transaction.
+        Start by pasting the transaction HEX you wish to add a signature to:
       </p>
       <div class="form-group row">
         <label for="tx" class="col-sm-2 col-form-label">Transaction HEX</label>
@@ -56,7 +56,7 @@
       <div v-if="Object.keys(accountData).length > 0 && !error">
         <div class="alert alert-success text-center">
           🎉 Retrieved account &amp; MultiSign information for
-          <a :href="explorerUrl + accountData.Account" target="_blank"><code class="text-primary">{{ accountData.Account }}</code></a>
+          <a :href="$env.explorerUrl + accountData.Account" target="_blank"><code class="text-primary">{{ accountData.Account }}</code></a>
           from the XRP ledger.
         </div>
 
@@ -68,12 +68,12 @@
           <label class="col-sm-2">Signers</label>
           <div class="col-sm-10 mb-3">
             <a v-for="signer in accountData.signer_lists[0].SignerEntries"
-              :key="signer.Account" :href="explorerUrl + signer.SignerEntry.Account"
+              :key="signer.Account" :href="$env.explorerUrl + signer.SignerEntry.Account"
               target="_blank"
-              class="btn btn-outline-primary btn-sm mr-2 mb-1"
+              class="btn btn-sm mr-2 mb-1"
               :class="{
                 'btn-outline-primary': existingSigners.indexOf(signer.SignerEntry.Account) < 0,
-                'btn-outline-success': existingSigners.indexOf(signer.SignerEntry.Account) > -1
+                'btn-success text-white': existingSigners.indexOf(signer.SignerEntry.Account) > -1
               }"
             >
               <span v-if="existingSigners.indexOf(signer.SignerEntry.Account) > -1">✓</span>
@@ -90,7 +90,7 @@
             </div>
           </div>
 
-          <div v-if="quorumMet && !fullySigned" class="col-sm-12 mt-2">
+          <div v-if="quorumMet >= accountData.signer_lists[0].SignerQuorum && !fullySigned" class="col-sm-12 mt-2">
             <div class="alert alert-success text-center">
               ✓ <b>Signer Quorum is met.</b> Existing signer quorum (<code class="text-dark">{{ quorumMet }}</code>) satisfies signer list quorum (<code class="text-dark">{{ accountData.signer_lists[0].SignerQuorum }}</code>).
               <br />
@@ -153,9 +153,6 @@ export default {
     Sign
   },
   computed: {
-    explorerUrl () {
-      return 'https://bithomp.com/explorer/'
-    },
     ready () {
       return this.$env.rippled.connected && this.$env.rippled.ledger
     },
@@ -163,7 +160,7 @@ export default {
       return this.tx.trim().toUpperCase().match(/^[A-F0-9]+$/)
     },
     fullySigned () {
-      const signerList = this.accountData.signer_lists[0].SignerEntries.map(e => { return e.SignerEntry.Account })
+      const signerList = this.accountData.signer_lists[0].SignerEntries.map(e => { return e.SignerEntry.Account }).sort()
       return signerList.length === this.existingSigners.length && signerList.every((u, i) => { return u === this.existingSigners[i] })
     },
     quorumMet () {
@@ -260,7 +257,7 @@ export default {
 
         Object.assign(this.rawTxData, JSON.parse(JSON.stringify(this.txData)))
         if (typeof this.rawTxData.Signers !== 'undefined') {
-          this.existingSigners = this.rawTxData.Signers.map(s => { return s.Signer.Account })
+          this.existingSigners = this.rawTxData.Signers.map(s => { return s.Signer.Account }).sort()
         }
 
         // Only remove after composing the rawTxData for next signature, so only don't show
