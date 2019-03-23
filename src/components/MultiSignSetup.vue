@@ -137,6 +137,7 @@ export default {
         { Account: 'rhvQBkvqopfDvGASnCRvNiSd8aAUYrwyx1', Weight: 1 },
         { Account: 'rwQchpF7h2tKHb2UZawtTNJwnLwGQXugrC', Weight: 1 },
         { Account: 'rLYJmUFGGiDmfk8ZGThKcVUpwqZniXiXMK', Weight: 1 }
+        { Account: 'rwQchpF7h2tKHb2UZawtTNJwnLwGQXugrC', Weight: 3 }
       ],
       submitting: false,
       submitResult: {},
@@ -158,12 +159,23 @@ export default {
       const unique = accounts.filter((elem, pos) => {
         return accounts.indexOf(elem) === pos
       })
+
       if (unique.length !== accounts.length) {
         return 'Duplicate signer in Signer List. A signer should occur only once in the Signer list.'
       }
+
       if (accounts.indexOf(this.routeData.account) > -1) {
-        return `The account (<code class="text-danger">${this.routeData.account}</code>) should not be one of the signers`
+        return `The account (<code class="text-danger">${this.routeData.account}</code>) should not be one of the signers.`
       }
+
+      const gtQuorum = this.accounts.filter(a => { return a.Weight > this.quorum })
+      if (gtQuorum.length > 0) {
+        return `
+          A signer with a weight (<code class="text-dark">${gtQuorum[0].Weight}</code>) greater than the quorum (<code class="text-dark">${this.quorum}</code>) 
+          is found (<code class="text-danger">${gtQuorum[0].Account}</code>).
+        `
+      }
+
       return false
     },
     txData () {
