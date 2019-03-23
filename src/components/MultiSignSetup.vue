@@ -69,9 +69,7 @@
           </table>
         </div>
         <div v-if="preCheckError" class="col-sm-12">
-          <div class="alert alert-danger text-center">
-            All signers should be unique.
-          </div>
+          <div class="alert alert-danger text-center" v-html="preCheckError"></div>
         </div>
         <label v-if="signerWeight > 0 && !preCheckError" for="account" class="col-sm-2 col-form-label">Total signer weight</label>
         <div v-if="signerWeight > 0 && !preCheckError" class="col-sm-10 pt-1">
@@ -162,6 +160,9 @@ export default {
       })
       if (unique.length !== accounts.length) {
         return 'Duplicate signer in Signer List. A signer should occur only once in the Signer list.'
+      }
+      if (accounts.indexOf(this.routeData.account) > -1) {
+        return `The account (<code class="text-danger">${this.routeData.account}</code>) should not be one of the signers`
       }
       return false
     },
