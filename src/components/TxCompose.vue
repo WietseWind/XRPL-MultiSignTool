@@ -42,7 +42,7 @@
         This account (<a :href="$env.explorerUrl + account" target="_blank"><code class="text-primary">{{ account }}</code></a>)
         isn't setup for MultiSigning.
         <br />
-        <button @click="routeSetupMultiSigning()" class="mt-3 btn btn-primary">Setup MultiSigning</button>
+        <button @click="routeSetupMultiSigning()" class="mt-3 btn btn-primary">Setup MultiSigning →</button>
       </div>
       <div v-if="Object.keys(accountData).length > 0">
         <div class="alert alert-success text-center">
