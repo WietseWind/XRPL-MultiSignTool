@@ -25,11 +25,21 @@
       <div class="form-group row">
         <label for="tx" class="col-sm-2 col-form-label">Transaction HEX</label>
         <div class="col-sm-10">
-          <input :disabled="!ready || fetching" autocomplete="off" type="text" id="tx" class="form-control" v-model="tx" placeholder="Signed transaction HEX to combine" />
+          <div v-if="Object.keys(accountData).length > 0 && quorumMet >= accountData.signer_lists[0].SignerQuorum && !fullySigned" class="alert alert-success text-center mb-0">
+            ✓ <b>Signer Quorum is met.</b>
+            <!-- Existing signer weight (sum) (<code class="text-dark">{{ quorumMet }}</code>) satisfies signer list -->
+            quorum (<code class="text-dark">{{ accountData.signer_lists[0].SignerQuorum }}</code>).
+          </div>
+
+          <div v-if="Object.keys(accountData).length > 0 && fullySigned" class="alert alert-success text-center mb-0">
+            ✓ <b>Transaction fully signed.</b> All signers from at SignerList have signed.
+          </div>
+
+          <input v-if="allowAddNewTx" :disabled="!ready || fetching" autocomplete="off" type="text" id="tx" class="form-control" v-model="tx" placeholder="Signed transaction HEX to combine" />
         </div>
         <div class="col-sm-10 offset-sm-2 text-right pt-2">
           <button v-if="hex.length > 0" @click="reset()" class="btn btn-outline-secondary float-left">⌫ Restart</button>
-          <button :disabled="!ready || !txIsHex || fetching" @click="decodeTx()" class="btn btn-primary">Add →</button>
+          <button v-if="allowAddNewTx" :disabled="!ready || !txIsHex || fetching" @click="decodeTx()" class="btn btn-primary">Add →</button>
         </div>
       </div>
 
@@ -53,28 +63,21 @@
             class="btn btn-sm mr-2 mb-1"
             :class="{
               'btn-outline-primary': existingSigners.indexOf(signer.SignerEntry.Account) < 0,
-              'btn-success text-white': existingSigners.indexOf(signer.SignerEntry.Account) > -1
+              'btn-success text-white': existingSigners.indexOf(signer.SignerEntry.Account) > -1 && minimalSignerListAccounts.indexOf(signer.SignerEntry.Account) > -1,
+              'btn-outline-info': existingSigners.indexOf(signer.SignerEntry.Account) > -1 && minimalSignerListAccounts.indexOf(signer.SignerEntry.Account) < 0
             }"
           >
-            <span v-if="existingSigners.indexOf(signer.SignerEntry.Account) > -1">✓</span>
+            <!-- <span v-if="existingSigners.indexOf(signer.SignerEntry.Account) > -1 && minimalSignerListAccounts.indexOf(signer.SignerEntry.Account) > -1">✓</span> -->
             <code>{{ signer.SignerEntry.Account }}</code>
-            <span v-if="existingSigners.indexOf(signer.SignerEntry.Account) < 0" class="ml-1 badge badge-primary">{{ signer.SignerEntry.SignerWeight }}</span>
+            <span class="ml-1 badge" :class="{
+              'badge-primary': existingSigners.indexOf(signer.SignerEntry.Account) < 0,
+              'badge-light text-success': existingSigners.indexOf(signer.SignerEntry.Account) > -1 && minimalSignerListAccounts.indexOf(signer.SignerEntry.Account) > -1,
+              'badge-info text-white': existingSigners.indexOf(signer.SignerEntry.Account) > -1 && minimalSignerListAccounts.indexOf(signer.SignerEntry.Account) < 0
+            }">{{ signer.SignerEntry.SignerWeight }}</span>
           </a>
-        </div>
-
-        <div v-if="fullySigned" class="col-sm-12 mt-2">
-          <div class="alert alert-success text-center">
-            ✓ <b>Transaction fully signed.</b> All signers from at SignerList have signed.
-            <br />
-            <small>No need to add more signatures unless you want to replace an existing signature.</small>
-          </div>
-        </div>
-
-        <div v-if="quorumMet >= accountData.signer_lists[0].SignerQuorum && !fullySigned" class="col-sm-12 mt-2">
-          <div class="alert alert-success text-center">
-            ✓ <b>Signer Quorum is met.</b> Existing signer weight (sum) (<code class="text-dark">{{ quorumMet }}</code>) satisfies signer list quorum (<code class="text-dark">{{ accountData.signer_lists[0].SignerQuorum }}</code>).
-            <br />
-            <small>No need to add more signatures unless you explicitly want to.</small>
+          <div class="alert alert-warning text-center mt-2" v-if="existingSigners.length !== minimalSignerListAccounts.length">
+            The quorum is satisfied by using <code class="text-dark"><b>{{ minimalSignerListAccounts.length }}</b></code> of the
+            <code class="text-dark"><b>{{ existingSigners.length }}</b></code> multisigned transactions.
           </div>
         </div>
 
@@ -97,6 +100,11 @@
         <div v-if="quorumMet >= accountData.signer_lists[0].SignerQuorum || fullySigned" class="col-sm-10 offset-sm-2 mt-2">
           <div class="text-center">
             <a v-if="txSuccess" :href="$env.explorerUrl + submitResult.tx_json.hash" target="_blank" class="mt-5 mb-5 btn btn-lg btn-block btn-outline-success">View transaction (explorer) →</a>
+
+            <!-- <div class="text-left">
+              <VueJsonPretty :data="minimalSignerListAccounts" />
+            </div> -->
+
             <button v-if="!txSuccess" @click="combineAndSubmit()" :disabled="submitting" class="mt-5 mb-5 btn btn-lg btn-block btn-primary">Submit MultiSigned transaction →</button>
           </div>
         </div>
@@ -122,6 +130,94 @@ export default {
     VueJsonPretty
   },
   computed: {
+    allowAddNewTx () {
+      return !(Object.keys(this.accountData).length > 0 && this.fullySigned) && !(Object.keys(this.accountData).length > 0 && this.quorumMet >= this.accountData.signer_lists[0].SignerQuorum && !this.fullySigned)
+    },
+    minimalSignerList () {
+      if (Object.keys(this.accountData).length < 1) {
+        return []
+      }
+      let signers = {}
+      this.accountData.signer_lists[0].SignerEntries.forEach(s => {
+        signers[s.SignerEntry.Account] = s.SignerEntry.SignerWeight
+      })
+      const descWeightSigned = this.hex.map(h => {
+        let totalWeight = 0
+        return {
+          signers: h.signers,
+          tx: h,
+          signerWeight: h.signers.map(s => {
+            totalWeight += signers[s]
+            return {
+              Account: s,
+              Weight: signers[s]
+            }
+          }),
+          totalWeight: totalWeight
+        }
+      }).sort((a, b) => {
+        if (a.totalWeight < b.totalWeight) return 1
+        if (a.totalWeight > b.totalWeight) return -1
+        return 0
+      })
+
+      const oneSufficient = descWeightSigned.filter(a => {
+        return a.totalWeight === this.accountData.signer_lists[0].SignerQuorum
+      })
+
+      if (oneSufficient.length > 0) {
+        return [ oneSufficient[0].tx ]
+      } else {
+        /**
+         * Todo: need to make this more efficient to select the best combination of signers (weight)
+         */
+        const descSignedLimited = descWeightSigned.reduce((a, b) => {
+          const sumThisFar = a.reduce((c, d) => {
+            return c + d.totalWeight
+          }, 0)
+          if (sumThisFar < this.accountData.signer_lists[0].SignerQuorum) {
+            a.push(b)
+          }
+          return a
+        }, [])
+        const descSignedLimitedWeight = descSignedLimited.reduce((a, b) => {
+          return a + b.totalWeight
+        }, 0)
+
+        const ascSignedLimited = descWeightSigned.reverse().reduce((a, b) => {
+          const sumThisFar = a.reduce((c, d) => {
+            return c + d.totalWeight
+          }, 0)
+          if (sumThisFar < this.accountData.signer_lists[0].SignerQuorum) {
+            a.push(b)
+          }
+          return a
+        }, [])
+        const ascSignedLimitedWeight = ascSignedLimited.reduce((a, b) => {
+          return a + b.totalWeight
+        }, 0)
+
+        if (descSignedLimitedWeight < ascSignedLimitedWeight) {
+          return descSignedLimited.map(a => {
+            return a.tx
+          })
+        }
+
+        return ascSignedLimited.map(a => {
+          return a.tx
+        })
+      }
+    },
+    minimalSignerListAccounts () {
+      return this.minimalSignerList.map(a => {
+        return a.signers
+      }).reduce((a, b) => {
+        b.forEach(c => {
+          a.push(c)
+        })
+        return a
+      }, [])
+    },
     existingSigners () {
       return this.hex.map(h => {
         return h.signers
@@ -201,7 +297,7 @@ export default {
       this.submitting = true
       this.submitResult = {}
 
-      const Tx = XRPLAccountLib.sign(this.hex.map(h => {
+      const Tx = XRPLAccountLib.sign(this.minimalSignerList.map(h => {
         return { signedTransaction: h.blob }
       }))
 

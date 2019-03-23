@@ -112,11 +112,12 @@
         <div v-if="transaction.signed.id" class="col-sm-10 pt-2 mt-2">
           <p><b>Transaction signed 🎉</b></p>
           <p v-if="!$env.online" class="alert alert-warning text-center">Now go back online to submit the transaction to the XRP ledger.</p>
-          <button @click="submit()" :disabled="submitting || tesSUCCESS" class="btn btn-block btn-lg btn-primary" v-if="$env.online">Submit transaction →</button>
+          <button @click="submit()" :disabled="submitting" class="btn btn-block btn-lg btn-primary" v-if="$env.online && !tesSUCCESS">Submit transaction →</button>
         </div>
 
         <label v-if="Object.keys(submitResult).length > 0" for="account" class="mt-2 col-sm-2 col-form-label">Result</label>
         <div v-if="Object.keys(submitResult).length > 0" class="col-sm-10 pt-2 mt-2">
+          <a v-if="tesSUCCESS" :href="$env.explorerUrl + submitResult.tx_json.hash" target="_blank" class="mb-2 btn btn-lg btn-block btn-outline-success">View transaction (explorer) →</a>
           <VueJsonPretty :data="submitResult" />
         </div>
       </div>
