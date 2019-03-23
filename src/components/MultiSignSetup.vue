@@ -68,8 +68,13 @@
             </tfoot>
           </table>
         </div>
-        <label for="account" class="col-sm-2 col-form-label">Total signer weight</label>
-        <div class="col-sm-10 pt-1">
+        <div v-if="repeatedSigners" class="col-sm-12">
+          <div class="alert alert-danger text-center">
+            All signers should be unique.
+          </div>
+        </div>
+        <label v-if="signerWeight > 0 && !repeatedSigners" for="account" class="col-sm-2 col-form-label">Total signer weight</label>
+        <div v-if="signerWeight > 0 && !repeatedSigners" class="col-sm-10 pt-1">
           <span v-if="(signerWeight >= quorum || signerWeight === 0) && signerWeight > 1" class="h4" :class="{
             'text-muted': signerWeight === 0,
             'text-success': signerWeight >= quorum,
@@ -78,16 +83,18 @@
             <b>{{ signerWeight }}</b>
           </span>
           <span class="h4 text-muted" v-if="(signerWeight >= quorum && quorum > 0) && signerWeight > 1"> / {{ quorum }} 🎉</span>
-          <div class="alert alert-danger text-center" v-if="signerWeight === 1">
-            The total signer list should have at least a total weight of <code class="text-dark"><b>2</b></code>
-          </div>
-          <div class="alert alert-danger text-center" v-if="signerWeight > 1 && signerWeight < quorum">
-            Total weight of the signer (<code class="text-dark"><b>{{ signerWeight }}</b></code>) list is below the signer list quorum
-            (<code class="text-dark"><b>{{ quorum }}</b></code>).
+          <div v-else>
+            <div class="alert alert-danger text-center" v-if="signerWeight === 1">
+              The total signer list should have at least a total weight of <code class="text-dark"><b>2</b></code>
+            </div>
+            <div class="alert alert-danger text-center" v-if="signerWeight > 1 && signerWeight < quorum">
+              Total weight of the signer (<code class="text-dark"><b>{{ signerWeight }}</b></code>) list is below the signer list quorum
+              (<code class="text-dark"><b>{{ quorum }}</b></code>).
+            </div>
           </div>
         </div>
       </div>
-      <div class="form-group row" v-if="quorum > 0 && signerWeight >= quorum && signerWeight > 1">
+      <div class="form-group row" v-if="quorum > 0 && signerWeight >= quorum && signerWeight > 1 && !repeatedSigners">
         <label for="account" class="col-sm-2 col-form-label">SignerListSet tx</label>
         <div class="col-sm-10 pt-2">
           <VueJsonPretty :data="txData" />
@@ -144,6 +151,13 @@ export default {
   computed: {
     tesSUCCESS () {
       return Object.keys(this.submitResult).length > 0 && typeof this.submitResult.engine_result !== 'undefined' && this.submitResult.engine_result === 'tesSUCCESS'
+    },
+    repeatedSigners () {
+      const accounts = this.accounts.filter(a => { return a.Account !== '' }).map(a => { return a.Account }).sort()
+      const unique = accounts.filter((elem, pos) => {
+        return accounts.indexOf(elem) === pos
+      })
+      return unique.length !== accounts.length
     },
     txData () {
       return {
