@@ -168,6 +168,17 @@ export default {
         `
       }
 
+      const accountsEqQuorum = this.accounts.filter(a => { return a.Weight === this.quorum })
+      if (accountsEqQuorum.length > 0) {
+        return `
+          There's at least one account in the Signer list with a weight equal to the quorum (<code class="text-dark">${this.quorum}</code>).
+          The account <code class="text-dark">${accountsEqQuorum[0].Account}</code> is able to <u>single handedly sign a transaction</u>.
+          <br />
+          <br />
+          This may be on purpose, but just to make sure: is this really what you want?
+        `
+      }
+
       return false
     },
     preCheckError () {
