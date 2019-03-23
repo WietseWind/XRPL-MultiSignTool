@@ -179,6 +179,24 @@ export default {
         `
       }
 
+      const signersSortedByWeight = this.accounts.filter(a => { return true }).sort((a, b) => {
+        if (a.Weight > b.Weight) return -1
+        if (a.Weight < b.Weight) return 1
+        return 0
+      })
+      const remainingQuorum = signersSortedByWeight.slice(1).map(a => { return a.Weight }).reduce((a, b) => { return a + b }, 0)
+      if (remainingQuorum < this.quorum) {
+        return `
+          The <u>one</u> signer (<code class="text-dark">${signersSortedByWeight[0].Account}</code>) with the highest weight
+          (<code class="text-dark">${signersSortedByWeight[0].Weight}</code>) can block all signing (eg. <u>keys lost</u> or <u>refusing to sign</u>),
+          since the total weight (<code class="text-dark">${remainingQuorum}</code>) of the <u>remaining signers together cannot satisfy</u>
+          the quorum (<code class="text-dark">${this.quorum}</code>).
+          <br />
+          <br />
+          This may be on purpose, but just to make sure: is this really what you want?
+        `
+      }
+
       return false
     },
     preCheckError () {
