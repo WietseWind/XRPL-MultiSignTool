@@ -83,6 +83,9 @@
           <span v-if="(signerWeight >= quorum && quorum > 0) && signerWeight > 1">
             <span class="h4 text-muted"> / {{ quorum }} {{ preCheckWarning ? '' : '🎉' }}</span>
             <div v-if="preCheckWarning" v-html="preCheckWarning" class="mt-3 alert alert-warning text-center"></div>
+            <div v-if="preCheckWarning" class="text-center">
+              <button @click="ignoreWarning = true" v-if="!ignoreWarning" class="btn btn-outline-primary">OK. I know what I'm doing, continue →</button>
+            </div>
           </span>
           <div v-else>
             <div class="alert alert-danger text-center" v-if="signerWeight === 1">
@@ -95,7 +98,7 @@
           </div>
         </div>
       </div>
-      <div class="form-group row" v-if="quorum > 0 && signerWeight >= quorum && signerWeight > 1 && !preCheckError">
+      <div class="form-group row" v-if="quorum > 0 && signerWeight >= quorum && signerWeight > 1 && !preCheckError && !(preCheckWarning && !ignoreWarning)">
         <label for="account" class="col-sm-2 col-form-label">SignerListSet tx</label>
         <div class="col-sm-10 pt-2">
           <VueJsonPretty :data="txData" />
@@ -133,14 +136,11 @@ export default {
   },
   data () {
     return {
-      quorum: 1,
+      quorum: 2,
+      ignoreWarning: false,
       accounts: [
-        { Account: 'rwmRQUm6jmv9QLrYLWBAt9TXC3ZxWN2PB2', Weight: 1 },
-        { Account: 'rP8Yzr1bAnPS8mDcJ9hiaBtJP9Civ3e8QF', Weight: 1 },
-        { Account: 'rhvQBkvqopfDvGASnCRvNiSd8aAUYrwyx1', Weight: 1 },
-        { Account: 'rwQchpF7h2tKHb2UZawtTNJwnLwGQXugrC', Weight: 1 },
-        { Account: 'rLYJmUFGGiDmfk8ZGThKcVUpwqZniXiXMK', Weight: 1 }
-        { Account: 'rwQchpF7h2tKHb2UZawtTNJwnLwGQXugrC', Weight: 3 }
+        { Account: '', Weight: 1 },
+        { Account: '', Weight: 1 }
       ],
       submitting: false,
       submitResult: {},
@@ -277,12 +277,14 @@ export default {
     quorum (a) {
       this.quorum = parseInt((a + '').replace(/[^0-9]/g, ''))
       if (isNaN(this.quorum)) this.quorum = ''
+      this.ignoreWarning = false
     },
     'transaction.signed.id' () {
       this.submitResult = {}
     },
     accounts: {
       handler () {
+        this.ignoreWarning = false
         this.accounts.forEach(a => {
           if ((a.Weight + '').match(/[^0-9]/)) {
             a.Weight = parseInt((a.Weight + '').replace(/[^0-9]/g, ''))
