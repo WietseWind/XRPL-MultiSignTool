@@ -80,7 +80,10 @@
           }">
             <b>{{ signerWeight }}</b>
           </span>
-          <span class="h4 text-muted" v-if="(signerWeight >= quorum && quorum > 0) && signerWeight > 1"> / {{ quorum }} 🎉</span>
+          <span v-if="(signerWeight >= quorum && quorum > 0) && signerWeight > 1">
+            <span class="h4 text-muted"> / {{ quorum }} {{ preCheckWarning ? '' : '🎉' }}</span>
+            <div v-if="preCheckWarning" v-html="preCheckWarning" class="mt-3 alert alert-warning text-center"></div>
+          </span>
           <div v-else>
             <div class="alert alert-danger text-center" v-if="signerWeight === 1">
               The total signer list should have at least a total weight of <code class="text-dark"><b>2</b></code>
@@ -153,6 +156,19 @@ export default {
   computed: {
     tesSUCCESS () {
       return Object.keys(this.submitResult).length > 0 && typeof this.submitResult.engine_result !== 'undefined' && this.submitResult.engine_result === 'tesSUCCESS'
+    },
+    preCheckWarning () {
+      if (this.signerWeight === this.quorum) {
+        return `
+          The total signer weight (<code class="text-dark">${this.signerWeight}</code>) is equal to the quorum (<code class="text-dark">${this.quorum}</code>).
+          This would mean if <b>one of the signers no longer has access to his/her key, or <u>refuses</u> to sign, you can <u>no longer access your funds</u></b>.
+          <br />
+          <br />
+          Are you sure you want to continue without signer redundancy?
+        `
+      }
+
+      return false
     },
     preCheckError () {
       const accounts = this.accounts.filter(a => { return a.Account !== '' }).map(a => { return a.Account }).sort()
