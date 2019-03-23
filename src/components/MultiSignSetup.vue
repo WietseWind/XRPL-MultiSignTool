@@ -68,13 +68,13 @@
             </tfoot>
           </table>
         </div>
-        <div v-if="repeatedSigners" class="col-sm-12">
+        <div v-if="preCheckError" class="col-sm-12">
           <div class="alert alert-danger text-center">
             All signers should be unique.
           </div>
         </div>
-        <label v-if="signerWeight > 0 && !repeatedSigners" for="account" class="col-sm-2 col-form-label">Total signer weight</label>
-        <div v-if="signerWeight > 0 && !repeatedSigners" class="col-sm-10 pt-1">
+        <label v-if="signerWeight > 0 && !preCheckError" for="account" class="col-sm-2 col-form-label">Total signer weight</label>
+        <div v-if="signerWeight > 0 && !preCheckError" class="col-sm-10 pt-1">
           <span v-if="(signerWeight >= quorum || signerWeight === 0) && signerWeight > 1" class="h4" :class="{
             'text-muted': signerWeight === 0,
             'text-success': signerWeight >= quorum,
@@ -94,7 +94,7 @@
           </div>
         </div>
       </div>
-      <div class="form-group row" v-if="quorum > 0 && signerWeight >= quorum && signerWeight > 1 && !repeatedSigners">
+      <div class="form-group row" v-if="quorum > 0 && signerWeight >= quorum && signerWeight > 1 && !preCheckError">
         <label for="account" class="col-sm-2 col-form-label">SignerListSet tx</label>
         <div class="col-sm-10 pt-2">
           <VueJsonPretty :data="txData" />
@@ -134,8 +134,11 @@ export default {
     return {
       quorum: 1,
       accounts: [
-        { Account: '', Weight: 1 },
-        { Account: '', Weight: 1 }
+        { Account: 'rwmRQUm6jmv9QLrYLWBAt9TXC3ZxWN2PB2', Weight: 1 },
+        { Account: 'rP8Yzr1bAnPS8mDcJ9hiaBtJP9Civ3e8QF', Weight: 1 },
+        { Account: 'rhvQBkvqopfDvGASnCRvNiSd8aAUYrwyx1', Weight: 1 },
+        { Account: 'rwQchpF7h2tKHb2UZawtTNJwnLwGQXugrC', Weight: 1 },
+        { Account: 'rLYJmUFGGiDmfk8ZGThKcVUpwqZniXiXMK', Weight: 1 }
       ],
       submitting: false,
       submitResult: {},
@@ -152,12 +155,15 @@ export default {
     tesSUCCESS () {
       return Object.keys(this.submitResult).length > 0 && typeof this.submitResult.engine_result !== 'undefined' && this.submitResult.engine_result === 'tesSUCCESS'
     },
-    repeatedSigners () {
+    preCheckError () {
       const accounts = this.accounts.filter(a => { return a.Account !== '' }).map(a => { return a.Account }).sort()
       const unique = accounts.filter((elem, pos) => {
         return accounts.indexOf(elem) === pos
       })
-      return unique.length !== accounts.length
+      if (unique.length !== accounts.length) {
+        return 'Duplicate signer in Signer List. A signer should occur only once in the Signer list.'
+      }
+      return false
     },
     txData () {
       return {
