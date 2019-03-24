@@ -21,10 +21,10 @@
 <script>
 import Header from './components/Header'
 import Home from './components/Home'
-import MultiSignSetup from './components/MultiSignSetup'
 import TxCompose from './components/TxCompose'
 import TxSign from './components/TxSign'
 import TxCombine from './components/TxCombine'
+import MultiSignSetup from './components/MultiSignSetup'
 
 export default {
   name: 'app',
