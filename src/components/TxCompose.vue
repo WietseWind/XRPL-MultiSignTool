@@ -38,25 +38,56 @@
 
       <div class="alert alert-primary text-center" v-if="fetching">Querying the XRPL...</div>
       <div class="alert alert-danger text-center" v-if="error"><b>Error:</b> {{ errorData }}</div>
-      <div class="alert alert-warning text-center" v-if="setupMultiSigning && !fetching && !error">
+      <div class="alert alert-warning text-center" v-if="setup.multiSigning && !fetching && !error">
         This account (<a :href="$env.explorerUrl + account" target="_blank"><code class="text-primary">{{ account }}</code></a>)
-        isn't setup for MultiSigning.
+        <u>isn't setup for MultiSigning</u>.
         <br />
-        <button @click="routeSetupMultiSigning()" class="mt-3 btn btn-primary">Setup MultiSigning →</button>
+        <button @click="route('MultiSignSetup', 'multiSigning')" class="mt-3 btn btn-primary">Setup MultiSigning →</button>
       </div>
       <div v-if="Object.keys(accountData).length > 0">
-        <div class="alert alert-success text-center">
-          🎉 Retrieved account &amp; MultiSign information for
-          <a :href="$env.explorerUrl + accountData.Account" target="_blank"><code class="text-primary">{{ accountData.Account }}</code></a>
-          from the XRP ledger.
+        <div v-if="setup.regularKey && !setup.disableMaster && specialTx === ''" class="row">
+          <div class="col-12">
+            <div class="mt-3 alert alert-warning text-center">
+              Your account has a <b>regular key</b> (<code class="text-dark"><a :href="$env.explorerUrl + setup.regularKey" target="_blank"><code class="text-primary">{{ setup.regularKey }}</code></a></code>) configured.
+              <br />
+              <small>The XRP Ledger allows an account to authorize a secondary key pair, called a regular key pair, to sign future transactions.</small>
+              <br />
+              <br />
+              With a <b>regular key</b> setup, multi signing can be bypassed by simply signing only with the regular key. This may be on purpose, in which case
+              you can continue keeping the regular key in place. However, if you <b>only want to allow multi signed transactions</b>
+              for your account, you can compose, multisign and submit a transaction to <b>unset the regular key</b>.
+            </div>
+            <div class="text-center">
+              <button @click="setup.regularKey = false" class="btn btn-outline-danger mr-2">Keep the regular key, continue →</button>
+              or
+              <button @click="setup.regularKey = false; specialTx = 'regularKey'" class="btn btn-primary ml-2">Continue by <b><u>unsetting</u> the regular key</b> →</button>
+            </div>
+          </div>
         </div>
-        <div class="row">
-          <label class="col-sm-2">Account Sequence</label>
-          <div class="col-sm-10">
+        <div v-if="setup.disableMaster && specialTx === ''" class="row">
+          <div class="col-12">
+            <div class="mt-3 alert alert-warning text-center">
+              Your account has <b><u>not disabled</u></b> the <b>master key</b>.
+              <br />
+              <br />
+              Without a disabled <b>master key</b>, multi signing can be bypassed by simply signing only with the key beloning to your account.
+              This may be on purpose, in which case you can continue. However, if you <b>only want to allow multi signed transactions</b>
+              for your account, you can compose, multisign and submit a transaction to <b>disable the master key</b>.
+            </div>
+            <div class="text-center">
+              <button @click="setup.disableMaster = false" class="btn btn-outline-danger mr-2">Ignore, continue →</button>
+              or
+              <button @click="setup.disableMaster = false; specialTx = 'disableMaster'" class="btn btn-primary ml-2"><b><u>Disable</u> the master key</b> →</button>
+            </div>
+          </div>
+        </div>
+        <div class="row" v-if="!(setup.regularKey || setup.disableMaster) || specialTx !== ''">
+          <label v-if="specialTx !== 'disableMaster'" class="col-sm-2">Account Sequence</label>
+          <div v-if="specialTx !== 'disableMaster'" class="col-sm-10">
             <code class="text-primary h6">{{ accountData.Sequence }}</code>
           </div>
-          <label class="col-sm-2">Signer Quorum</label>
-          <div class="col-sm-10">
+          <label v-if="specialTx !== 'disableMaster'" class="col-sm-2">Signer Quorum</label>
+          <div v-if="specialTx !== 'disableMaster'" class="col-sm-10">
             <code class="text-primary h6">{{ accountData.signer_lists[0].SignerQuorum }}</code>
           </div>
           <label class="col-sm-2">Signers</label>
@@ -66,8 +97,20 @@
               <span class="ml-1 badge badge-primary">{{ signer.SignerEntry.SignerWeight }}</span>
             </a>
           </div>
-          <label class="col-sm-2 mt-1">Transaction</label>
-          <div class="col-sm-10 mt-1">
+          <label v-if="specialTx !== 'disableMaster'"  class="col-sm-2 mt-1">Transaction</label>
+          <div v-if="specialTx === 'disableMaster'" class="col-sm-12 mt-4">
+            <p class="alert alert-danger text-center">
+              <b>ARE YOU SURE!?</b>
+              If you continue, the master key will be <b>DISABLED</b>, meaning from that moment on
+              you can <b>ONLY</b> send multisigned transactions (signed by the appropriate signers ↑).
+              If your signers don't have access to their key(s) anymore and you can't satisfy the
+              quorum, you will loose access to your funds.
+            </p>
+            <div class="text-center" v-if="!goSign">
+              <button @click="goSign = true" class="mt-0 btn btn-outline-danger">Yes, I'm sure. Disable the master key.</button>
+            </div>
+          </div>
+          <div v-if="specialTx !== 'disableMaster'" class="col-sm-10 mt-1">
             <div class="pb-1 tx">
               <small class="text-muted">
                 Memo's will be automatically converted from UTF-8 to HEX.
@@ -81,14 +124,17 @@
               </button>
             </div>
           </div>
-          <label v-if="transaction.signed.id !== '' || transaction.signed.error !== ''" class="col-sm-2 mt-3">Sign(ed) result(s)</label>
-          <div v-if="transaction.signed.id !== '' || transaction.signed.error !== ''" class="col-sm-10 mt-3">
+          <label v-if="specialTx !== 'disableMaster' && (transaction.signed.id !== '' || transaction.signed.error !== '')" class="col-sm-2 mt-3">Sign(ed) result(s)</label>
+          <div v-if="specialTx !== 'disableMaster' && (transaction.signed.id !== '' || transaction.signed.error !== '')" class="col-sm-10 mt-3">
             <div v-if="transaction.signed.error" class="alert alert-danger text-center">
               <small>Error signing transaction:</small><br />
               {{ transaction.signed.error }}
             </div>
             <div v-else class="alert alert-success text-center">
-              🎉 Signed transaction. Please distribute the HEX below to the signers.
+              🎉 Signed transaction<br />
+              <b>Please distribute the HEX below to the signers and ask them to sign it.</b>
+              <br />
+              <small>After signing, they can distribute their signed transaction to you, so you can <b>combine and submit</b> the transaction.</small>
             </div>
             <div v-clipboard:copy="transaction.signed.blob" class="alert alert-secondary signed-tx" v-if="transaction.signed.blob !== ''">
               <div class="text-center">
@@ -100,34 +146,59 @@
             </div>
           </div>
         </div>
+        <Sign v-if="goSign" :noSignAs="true" :rawTxData="transaction.json" :transaction="transaction" />
+        <div class="row" v-if="specialTx === 'disableMaster' && (transaction.signed.id !== '' || transaction.signed.error !== '')">
+          <label class="col-sm-2 mt-3">Submit</label>
+          <div class="col-sm-10 mt-3">
+            <a v-if="txSuccess" :href="$env.explorerUrl + submitResult.tx_json.hash" target="_blank" class="mb-2 btn btn-lg btn-block btn-outline-success">View transaction (explorer) →</a>
+            <button v-if="!txSuccess" @click="submitTx()" :disabled="submitting" class="mb-2 btn btn-lg btn-block btn-primary">Submit transaction →</button>
+          </div>
+          <label v-if="Object.keys(submitResult).length > 0" class="col-sm-2 col-form-label">Rippled response</label>
+          <div v-if="Object.keys(submitResult).length > 0" class="col-sm-10 pt-2">
+            <VueJsonPretty class="mt-1" :data="submitResult" />
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import VueJsonPretty from 'vue-json-pretty'
 import { codemirror } from 'vue-codemirror'
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/theme/monokai.css'
 import 'codemirror/mode/javascript/javascript.js'
 import 'codemirror/keymap/sublime.js'
 
+import Sign from './Sign.vue'
 import XRPLAccountLib from 'xrpl-accountlib'
 
 export default {
   name: 'TxCompose',
   components: {
-    codemirror
+    codemirror,
+    Sign,
+    VueJsonPretty
   },
   data () {
     return {
       account: '',
-      setupMultiSigning: false,
+      specialTx: '',
+      setup: {
+        multiSigning: false,
+        regularKey: false,
+        disableMaster: false
+      },
+      goSign: false,
       accountData: {},
       fetching: false,
       error: false,
       errorData: '',
+      submitting: false,
+      submitResult: {},
       transaction: {
+        defaultJson: {},
         validJson: true,
         invalidJsonMessage: '',
         text: `{}`,
@@ -163,16 +234,50 @@ export default {
     }
   },
   computed: {
+    txSuccess () {
+      return Object.keys(this.submitResult).length > 0 && typeof this.submitResult.engine_result_code !== 'undefined' && this.submitResult.engine_result_code === 0
+    },
     ready () {
       return this.$env.rippled.connected && this.$env.rippled.ledger
     }
   },
   watch: {
+    specialTx () {
+      if (this.specialTx === '') {
+        this.transaction.json = this.transaction.defaultJson
+        this.renderTransactionText()
+      } else {
+        switch (this.specialTx) {
+          case 'regularKey':
+            this.transaction.json = {
+              TransactionType: 'SetRegularKey',
+              Account: this.transaction.json.Account,
+              Sequence: this.transaction.json.Sequence,
+              LastLedgerSequence: this.transaction.json.LastLedgerSequence,
+              Fee: '50'
+            }
+            break
+          case 'disableMaster':
+            this.transaction.json = {
+              TransactionType: 'AccountSet',
+              Account: this.transaction.json.Account,
+              Sequence: this.transaction.json.Sequence,
+              LastLedgerSequence: this.transaction.json.LastLedgerSequence,
+              SetFlag: 4,
+              Fee: '50'
+            }
+            break
+          default:
+            //
+        }
+        this.renderTransactionText()
+      }
+    },
     '$env.rippled.endpoint' () {
       this.clear()
     },
     account () {
-      this.setupMultiSigning = false
+      this.setup.multiSigning = false
     },
     'transaction.text' () {
       this.clearSignedTxData()
@@ -190,9 +295,24 @@ export default {
     changeRoute: Function
   },
   methods: {
-    routeSetupMultiSigning () {
-      this.changeRoute('MultiSignSetup', { account: this.account, accountData: this.setupMultiSigning })
-      this.setupMultiSigning = false
+    submitTx () {
+      this.submitting = true
+      this.submitResult = {}
+
+      this.$env.rippled.connection.send({
+        command: 'submit',
+        tx_blob: this.transaction.signed.blob
+      }).then(r => {
+        this.submitting = false
+        this.submitResult = r
+      }).catch(e => {
+        this.submitting = false
+        this.submitResult = e
+      })
+    },
+    route (route, el) {
+      this.changeRoute(route, { account: this.account, accountData: this.setup[el] })
+      this.setup[el] = false
     },
     clearSignedTxData () {
       this.transaction.signed.id = ''
@@ -248,6 +368,9 @@ export default {
       return false
     },
     renderTransactionText () {
+      if (Object.keys(this.transaction.defaultJson).length < 1) {
+        this.transaction.defaultJson = this.transaction.json
+      }
       this.transaction.text = JSON.stringify(this.transaction.json, null, '\t')
     },
     setError (message) {
@@ -255,11 +378,17 @@ export default {
       this.errorData = message
     },
     clear () {
-      this.setupMultiSigning = false
+      Object.keys(this.setup).forEach(o => {
+        this.setup[o] = false
+      })
       this.fetching = false
       this.error = false
       this.errorData = ''
       this.accountData = {}
+      this.specialTx = ''
+      this.goSign = false
+      this.submitting = false
+      this.submitResult = {}
     },
     checkAccount () {
       this.clear()
@@ -275,6 +404,31 @@ export default {
           this.setError(typeof accountInfo.error_message !== 'undefined' ? accountInfo.error_message : accountInfo.error)
         } else {
           if (accountInfo.account_data.signer_lists && accountInfo.account_data.signer_lists.length > 0) {
+            if (typeof accountInfo.account_data.RegularKey !== 'undefined') {
+              this.setup.regularKey = accountInfo.account_data.RegularKey
+            }
+            if (typeof accountInfo.account_data.Flags !== 'undefined') {
+              let accountFlags = []
+              const accountRootFlags = {
+                PasswordSpent: 0x00010000, // password set fee is spent
+                RequireDestTag: 0x00020000, // require a DestinationTag for payments
+                RequireAuth: 0x00040000, // require authorization to hold IOUs
+                DepositAuth: 0x01000000, // require account to auth deposits
+                DisallowXRP: 0x00080000, // disallow sending XRP
+                DisableMaster: 0x00100000, // force regular key
+                NoFreeze: 0x00200000, // permanently disallowed freezing trustlines
+                GlobalFreeze: 0x00400000, // trustlines globally frozen
+                DefaultRipple: 0x00800000
+              }
+              Object.keys(accountRootFlags).forEach(f => {
+                if (accountInfo.account_data.Flags & accountRootFlags[f]) {
+                  accountFlags.push(f)
+                }
+              })
+              if (accountFlags.indexOf('DisableMaster') < 0) {
+                this.setup.disableMaster = true
+              }
+            }
             this.accountData = accountInfo.account_data
             this.transaction.json.Fee = (100 + (1 + this.accountData.signer_lists[0].SignerEntries.length)) + ''
             this.transaction.json.Account = this.accountData.Account
@@ -283,7 +437,7 @@ export default {
             this.renderTransactionText()
           } else {
             // this.setError(`Account isn't setup for multisiging (no signer list present)`)
-            this.setupMultiSigning = accountInfo.account_data
+            this.setup.multiSigning = accountInfo.account_data
           }
         }
       }).catch(e => {
