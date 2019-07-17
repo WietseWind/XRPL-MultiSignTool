@@ -109,7 +109,6 @@ export default {
         if (this.secretIsMnemonic && this.passphrase !== '') {
           options.passphrase = this.passphrase
         }
-        console.log(XRPLAccountLib)
         const account = XRPLAccountLib.derive[this.secretType](this.secret, options)
         if (typeof this.noSignAs === 'undefined' || !this.noSignAs) {
           account.signAs(this.signAs)
