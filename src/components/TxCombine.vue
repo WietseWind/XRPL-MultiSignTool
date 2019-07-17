@@ -120,7 +120,7 @@
 
 <script>
 import VueJsonPretty from 'vue-json-pretty'
-import XRPLAccountLib from 'xrpl-accountlib'
+import * as XRPLAccountLib from 'xrpl-accountlib'
 
 const rippleCodec = require('ripple-binary-codec')
 

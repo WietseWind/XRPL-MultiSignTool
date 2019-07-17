@@ -172,7 +172,7 @@ import 'codemirror/mode/javascript/javascript.js'
 import 'codemirror/keymap/sublime.js'
 
 import Sign from './Sign.vue'
-import XRPLAccountLib from 'xrpl-accountlib'
+import * as XRPLAccountLib from 'xrpl-accountlib'
 
 export default {
   name: 'TxCompose',

@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import XRPLAccountLib from 'xrpl-accountlib'
+import * as XRPLAccountLib from 'xrpl-accountlib'
 
 export default {
   name: 'Sign',
@@ -109,6 +109,7 @@ export default {
         if (this.secretIsMnemonic && this.passphrase !== '') {
           options.passphrase = this.passphrase
         }
+        console.log(XRPLAccountLib)
         const account = XRPLAccountLib.derive[this.secretType](this.secret, options)
         if (typeof this.noSignAs === 'undefined' || !this.noSignAs) {
           account.signAs(this.signAs)
