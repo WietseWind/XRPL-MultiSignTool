@@ -23,7 +23,7 @@
       <div class="form-group row">
         <label for="account" class="col-sm-2 col-form-label">Signer list Quorum</label>
         <div class="col-sm-10">
-          <input :class="{ 'is-invalid': !(quorum + '').match(/^[1-9][0-9]*$/) }" autocomplete="off" type="text" id="account" class="form-control" v-model.number="quorum" placeholder="Eg. 2">
+          <input :class="{ 'is-invalid': !(quorum + '').match(/^[1-9][0-9]*$/) }" autocomplete="off" type="text" id="account" class="monospace form-control" v-model.number="quorum" placeholder="Eg. 2">
           <span class="text-muted small">
             A target number for the signer weights. A multi-signature from this list is valid only if the
             sum weights of the signatures provided is greater than or equal to this value.
@@ -31,7 +31,7 @@
         </div>
       </div>
       <div class="form-group row">
-        <label class="col-sm-2 col-form-label">Signer list</label>
+        <label class="col-sm-2 col-form-label">Signer list (max. 8)</label>
         <div class="col-sm-10">
           <table class="table table-sm">
             <thead>
@@ -44,10 +44,10 @@
             <tbody>
               <tr class="alert" v-for="(a, i) in accounts" :key="i" >
                 <td>
-                  <input autocomplete="off" type="text" class="form-control" :class="{ 'is-invalid': a.Account !== '' && !a.Account.match(/^r[a-zA-Z0-9]{20,}$/) }" v-model="a.Account" placeholder="XRPL Account, eg. rXXXXXXXXX...">
+                  <input autocomplete="off" type="text" class="monospace form-control" :class="{ 'is-invalid': a.Account !== '' && !a.Account.match(/^r[a-zA-Z0-9]{20,}$/) }" v-model="a.Account" placeholder="XRPL Account, eg. rXXXXXXXXX...">
                 </td>
                 <td>
-                  <input autocomplete="off" type="text" class="form-control" :class="{ 'is-invalid': !(a.Weight + '').match(/^[1-9][0-9]*$/) }" v-model.number="a.Weight" placeholder="">
+                  <input autocomplete="off" type="text" class="monospace form-control" :class="{ 'is-invalid': !(a.Weight + '').match(/^[1-9][0-9]*$/) }" v-model.number="a.Weight" placeholder="">
                 </td>
                 <td>
                   <button @click="removeSigner(i)" class="btn btn-block" :class="{
@@ -62,7 +62,7 @@
                 <th></th>
                 <th></th>
                 <th>
-                  <button @click="addSigner()" :disabled="accounts.slice(-1)[0].Account === ''" class="btn btn-primary">＋</button>
+                  <button v-show="accounts.length < 8" @click="addSigner()" :disabled="accounts.slice(-1)[0].Account === ''" class="btn btn-primary">＋</button>
                 </th>
               </tr>
             </tfoot>
@@ -303,4 +303,7 @@ export default {
 </script>
 
 <style scoped lang="scss">
+  .monospace {
+    font-family: "Monaco", "Lucida Console", Courier, monospace;
+  }
 </style>
