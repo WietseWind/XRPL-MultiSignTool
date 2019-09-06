@@ -26,7 +26,7 @@
     "vue-clipboard2": "^0.3.0",
     "vue-codemirror": "^4.0.6",
     "vue-json-pretty": "^1.6.0",
-    "xrpl-accountlib": "^0.3.1"
+    "xrpl-accountlib": "^0.3.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.9.2",
