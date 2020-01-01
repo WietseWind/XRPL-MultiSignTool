@@ -18,7 +18,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "ripple-binary-codec": "^0.2.4",
+    "ripple-binary-codec": "^0.2.6",
     "ripple-hashes": "^0.3.4",
     "rippled-ws-client": "^1.0.0",
     "sweetalert": "^2.1.2",
