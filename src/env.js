@@ -7,8 +7,8 @@ export default new Vue({
       online: true,
       local: false,
       servers: {
-        test: 'wss://s.altnet.rippletest.net:51233',
-        live: 'wss://rippled.xrptipbot.com'
+        test: 'wss://testnet.xrpl-labs.com',
+        live: 'wss://xrpl.ws'
       },
       rippled: {
         endpoint: '',
