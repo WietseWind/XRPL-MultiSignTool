@@ -20,7 +20,7 @@
   "dependencies": {
     "ripple-binary-codec": "^0.2.6",
     "ripple-hashes": "^0.3.4",
-    "rippled-ws-client": "^1.2.2",
+    "rippled-ws-client": "^1.6.1",
     "sweetalert": "^2.1.2",
     "vue": "^2.6.11",
     "vue-clipboard2": "^0.3.1",
